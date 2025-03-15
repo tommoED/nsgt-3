@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nsgt_raster"
+version = "0.0.2"
+description = "A package for non-stationary Gabor transforms for use with raster graphics manipulation."
+readme = "README.md"
+requires-python = ">=3.7"
+license = { text = "MIT" }
+authors = [
+    { name = "Tommo Chung", email = "s1901700@ed.ac.uk" },
+    { name = "Thomas Grill", email = "grill@grrrr.org" },
+    { name = "Nicki Holighaus", email = "nicki.holighaus@oeaw.ac.at" },
+    { name = "Sevag H.", email = "sevagh@protonmail.com" }
+]
+keywords = ["nsgt", "audio", "gabor", "signal processing", "pytorch", "raster graphics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Multimedia :: Sound/Audio",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9"
+]
+dependencies = [
+    "torch==2.6.0",
+    "torchaudio==2.6.0",
+    "tifffile[all]",
+    "pysoundfile"
+]
+
+[project.urls]
+Homepage = "https://github.com/tommoed/nsgt"
+Repository = "https://github.com/tommoed/nsgt"
+Documentation = "https://github.com/tommoed/nsgt#readme"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
