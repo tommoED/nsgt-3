@@ -1,4 +1,4 @@
 images/**
-edited/**
+# edited/**
 src/__pycache__/**
 *.egg-info
