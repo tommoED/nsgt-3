@@ -7,9 +7,11 @@ import json
 from src.GaborSystem import GaborSystem
         
 C, F, T = 0, 1, 2
+
+COLOURCHANNEL = 2
         
 
-def c_to_tiff(c: Tensor, filename: str, gs: GaborSystem, normalize: bool = True) -> None:
+def c_to_tiff(c: Tensor, filename: str, gs: GaborSystem, normalize: bool = True, colormode: str = "miniswhite") -> None:
     """
     Encode a complex spectrogram tensor as a multi-page TIFF file.
     
@@ -17,7 +19,8 @@ def c_to_tiff(c: Tensor, filename: str, gs: GaborSystem, normalize: bool = True)
         c (Tensor): Complex spectrogram tensor [channels, bins, frames]
         filename (str): Output filename for the TIFF file
         normalize (bool, optional): Whether to normalize magnitude values to [0,1]. Defaults to True.
-    
+        colormode (str, optional): use 'minisblack' or 'miniswhite'.
+
     The TIFF file will contain:
         - Page 0: Magnitude spectrogram
         - Page 1: Phase spectrogram (in radians, scaled to [0,1])
@@ -42,9 +45,14 @@ def c_to_tiff(c: Tensor, filename: str, gs: GaborSystem, normalize: bool = True)
     
     # Stack the magnitude and phase as separate pages
     # Convert to float32 for better compatibility
-    tiff_data = torch.stack([phase, magnitude], dim=C).float().flip(F)
 
     
+    if colormode == "rgb":
+        tiff_data = torch.stack([magnitude, magnitude, phase], dim=COLOURCHANNEL).flip(0)
+    else:
+        tiff_data = torch.stack([phase, magnitude], dim=C).flip(F)
+    
+
     print(tiff_data.shape)
     
     # Convert to numpy for tifffile
@@ -59,7 +67,7 @@ def c_to_tiff(c: Tensor, filename: str, gs: GaborSystem, normalize: bool = True)
     metadata_json = json.dumps(metadata)
     
     # Write to TIFF file with metadata in the ImageDescription tag
-    imwrite(filename, tiff_data_np, photometric='minisblack', description=metadata_json)
+    imwrite(filename, tiff_data_np, photometric=colormode, description=metadata_json)
     print(f"Saved complex spectrogram to {filename} with {tiff_data_np.shape} shape")
 
 
@@ -76,19 +84,32 @@ def c_from_tiff(filename: str, denormalization_constant: float = None) -> Tensor
     """
 
     P, F, T = 0, 1, 2
+
     # Read the TIFF file
     tiff_data = torch.tensor(imread(filename))
+    multicolour = tiff_data.shape[COLOURCHANNEL] == 3
     # Use a fallback if the pages aren't recognised
     if tiff_data.shape[P] != 2:
         with TiffFile(filename) as tif:
             pages = [page.asarray() for page in tif.pages]
 
-        if len(pages) != 2:
-            raise ValueError("TIFF file contains more than a magnitude and phase page")
 
-        phase = torch.tensor(pages[0])
-        magnitude = torch.tensor(pages[1])
+        if multicolour:
+            _, magnitude, phase = tiff_data.flip(0).split([1, 1, 1], dim=COLOURCHANNEL)
+            phase = phase.squeeze(2)
+            magnitude = magnitude.squeeze(2)
+        else:
+            phase = torch.tensor(pages[0])
+            magnitude = torch.tensor(pages[1])
 
+            print(phase.shape)
+            print(magnitude.shape)
+
+            if magnitude.dim() == 3:
+                # this is likely if a spurious alpha channel was added
+                raise ValueError("Cannot synthesise: TIFF file contains an alpha channel")
+            
+        
     else:
         print("Importing tiff c with shape: ", tiff_data.shape)
         phase, magnitude = tiff_data.flip(F)

@@ -76,8 +76,8 @@ class NSGData:
         stereo = c.shape[0] == 2
         return cls(filepath, stereo, gs, c, s)
     
-    def to_tiff(self, filepath: str, normalize = True):
-        c_to_tiff(self.c, filepath, self.GS, normalize)
+    def to_tiff(self, filepath: str, normalize = True, colormode = "miniswhite"):
+        c_to_tiff(self.c, filepath, self.GS, normalize, colormode)
 
     
     # Notebook functions
