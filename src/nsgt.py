@@ -91,6 +91,8 @@ def nsigtf(
     fft : function = torch.fft.fft
     ifft : function = torch.fft.irfft
 
+    F, T = 1, 2
+
     if reducedform:
         sl = lambda x: chain(
             x[reducedform            : len(gd)//2+1-reducedform],
@@ -99,7 +101,9 @@ def nsigtf(
     else:
         sl = lambda x: x
     
-    maxLg = int(max(len(gdii) for gdii in sl(gd)))
+    Lgs = [len(gdii) for gdii in sl(gd)]
+
+    maxLg = int(max(Lgs))
 
     ragged_gdiis = [
         torch.nn.functional.pad(
@@ -113,29 +117,26 @@ def nsigtf(
     c_dtype = c.dtype
     fc = fft(c)
 
-    fr = torch.zeros(c.shape[0], nn, dtype=c_dtype)  # Allocate output
+    fr    = torch.zeros(c.shape[0], nn, dtype=c_dtype)  # Allocate output
     temp0 = torch.empty(c.shape[0], maxLg, dtype=fr.dtype)  # pre-allocation
 
-    fbins = c.shape[1]
-    loopparams = []
-    for gdii,win_range in zip(sl(gd), sl(wins)):
-        Lg = len(gdii)
-        wr1 = win_range[:(Lg)//2]
-        wr2 = win_range[-((Lg+1)//2):]
-        p = (wr1,wr2,Lg)
-        loopparams.append(p)
-
+    fbins = c.shape[F]
+        
     # Overlapp-add procedure
-    for i,(wr1,wr2,Lg) in enumerate(loopparams[:fbins]):
+    for i in range(fbins):
         t = fc[:, i]
-
+        Lg = Lgs[i]
+        
         r = (Lg+1)//2
         l = (Lg//2)
 
-        t1 = temp0[:, :r]
+        wr1 = sl(wins)[i][  :l]
+        wr2 = sl(wins)[i][-r: ]
+
+        t1 = temp0[:,     :r ]
         t2 = temp0[:, Lg-l:Lg]
 
-        t1[:, :] = t[:, :r]
+        t1[:, :] = t[:,        :r]
         t2[:, :] = t[:, maxLg-l:maxLg]
 
         temp0[:, :Lg] *= gdiis[i, :Lg]
@@ -145,6 +146,6 @@ def nsigtf(
         fr[:, wr2] += t1
 
     ftr = fr[:, :nn//2+1]
-    sig = ifft(ftr, n=nn) ### NEED TO FIX!!!
+    sig = ifft(ftr, n=nn)
     sig = sig[:, :Ls] # Truncate the signal to original length (if given)
     return sig
