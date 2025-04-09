@@ -88,10 +88,10 @@ class NSGData:
     
     def show(self, fig = None):
         import matplotlib.pyplot as plt
-        def spectrogram(x, ax, title, cmap='gray', n_labels=4):
+        def spectrogram(x, ax, title, cmap='gray', n_labels=4, norm=None):
             scale = self.GS.scale
 
-            im = ax.imshow(x.squeeze(), origin='lower', aspect='auto', cmap=cmap)
+            im = ax.imshow(x.squeeze(), origin='lower', aspect='auto', cmap=cmap, norm=norm)
             ax.set_title(title)
             ax.set_ylabel('Frequency (Hz)')
             ax.set_yticks(range(len(scale.F)))
@@ -106,7 +106,7 @@ class NSGData:
         else:
             axes = fig.subplots(3,1)
         
-        spectrogram(self.c.abs(), axes[0], 'Magnitude (dB)')
+        spectrogram(self.c.abs(), axes[0], 'Magnitude (dB)', cmap='inferno', norm='log')
         spectrogram(self.c.angle(), axes[1], 'Phase', cmap='hsv')
 
         time = torch.arange(self.s.shape[-1]) / self.GS.params.fs
