@@ -10,7 +10,7 @@ from src.nsgt import nsgtf, nsigtf
 from src.interaural import interaural
 from src.GaborSystem import GaborSystem, GaborSystemParams
 
-
+import matplotlib.pyplot as plt
 
 
 @dataclass
@@ -87,7 +87,6 @@ class NSGData:
         return display(widget)
     
     def show(self, fig = None):
-        import matplotlib.pyplot as plt
         def spectrogram(x, ax, title, cmap='gray', n_labels=4, norm=None):
             scale = self.GS.scale
 
@@ -110,7 +109,7 @@ class NSGData:
         spectrogram(self.c.angle(), axes[1], 'Phase', cmap='hsv')
 
         time = torch.arange(self.s.shape[-1]) / self.GS.params.fs
-        axes[2].plot(time, self.s.squeeze())        
+        axes[2].plot(time[::100], self.s.squeeze()[::100])        
         axes[2].set_title('Waveform')
         axes[2].set_xlabel('Time (s)')
         axes[2].set_ylabel('Amplitude')
