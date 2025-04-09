@@ -87,7 +87,7 @@ class NSGData:
         return display(widget)
     
     def show(self, fig = None):
-        def spectrogram(x, ax, title, cmap='gray', n_labels=4, norm=None):
+        def spectrogram(x, ax, title, cmap='inferno', n_labels=4, norm=None):
             scale = self.GS.scale
 
             im = ax.imshow(x.squeeze(), origin='lower', aspect='auto', cmap=cmap, norm=norm)
